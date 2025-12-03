@@ -5,59 +5,15 @@ import CreateTable from "../../components/createtable";
 import React from "react";
 import {useState,useEffect} from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../utils/supabaseClient";
-import { Session } from "@supabase/supabase-js";
 
 export default function HeroPage() {
     const router = useRouter();
-    const [entry, setEntry] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
 
 
     // getting session info
-useEffect(() => {
-  // Fetch session on mount
-  const getSession = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (session) {
-      setEntry(session);
-      console.log("🟢 Session found on mount:", session);
-    } else {
-      console.log("🔴 No session found on mount");
-    }
-
-    setLoading(false);
-  };
-
-  getSession();
-
-  // Subscribe to auth state changes
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((event, session) => {
-    console.log("Auth event:", event);
-
-    if (event === "SIGNED_IN") {
-      setEntry(session);
-      console.log("✅ User signed in:", session);
-    }
-
-    if (event === "SIGNED_OUT") {
-      setEntry(null);
-      router.push("/signin"); // Redirect to login when signed out
-    }
-  });
-
-  // Cleanup subscription when unmounted
-  return () => {
-    subscription.unsubscribe();
-  };
-}, [router]);
 
 
 
@@ -69,16 +25,7 @@ useEffect(() => {
     };
 
     // If loading session info, you might want to show a loading state
-    if (loading) {
-        return <div className="flex justify-center items-center h-screen w-screen">Loading...</div>;
-    }
-
-    // If no session, redirect to sign-in page
-    if (!entry) {
-        router.push('/signin');
-        return <div className="flex justify-center items-center text-3xl text-red-300 h-screen w-screen">session expired please sign in again</div>
-    }
-
+    
     return (
         // 1. Main layout: flex-row for desktop, but flex (col) for mobile is
         // handled by hiding the sidebar.

@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import { supabase } from "../utils/supabaseClient";
 
 export default function JoinTable({ onClose }: { onClose: () => void }) {
   const [space, setSpace] = useState({
@@ -10,42 +9,7 @@ export default function JoinTable({ onClose }: { onClose: () => void }) {
     user_id:""
   });
 
-  const handleJoin = async () => {
-    try {
-      const {data:spaceData, error} = await supabase
-      .from('spaces')
-      .select('*')
-      .eq('invite_code', space.code)
-      .single();
-
-      if (error) {
-        console.log("Error fetching space:", error);
-        return;
-      } else {
-        return spaceData;
-      }
-    } catch (error) {
-      console.log("Error joining space:", error);
-    }
-
-    setSpace({
-    ...space,
-    space_id: space.code,
-    user_id: (await supabase.auth.getUser()).data.user?.id || ""
-    });
-
-    const { data, error } = await supabase
-      .from('members')
-      .insert([space]);
-
-    if (error) {
-      console.log("Error inserting member:", error);
-    } else {
-      console.log("Member inserted successfully:", data);
-      onClose();
-    }
-
-  }
+  
   return (
     <div
       className="flex justify-center w-screen items-center "
@@ -68,7 +32,7 @@ export default function JoinTable({ onClose }: { onClose: () => void }) {
         />
 
         <button
-          onClick={handleJoin}
+        // join table button
         className="bg-blue-200 rounded-full p-3 w-full text-blue-500 border-2 border-blue-500"
         >
           Continue
