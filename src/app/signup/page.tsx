@@ -1,29 +1,34 @@
 "use client"
-
+import axios from 'axios';
 import { supabase } from "../../utils/supabaseClient";
 import { useRouter } from 'next/navigation';
 export default function SignUp(){
     
     // const router = useRouter();
 
-    const handleSignUp = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/hero`, // optional but good practice
-        },
-    });
-    
-    if (data) {
-        console.log("Google sign-up data:", data);
-    //   setSession(data.session);
+const handleSignUp = async () => {
+  try {
+    const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    // 1. Make a request to backend to get redirect URL
+    const res = await axios.get(`${backend}/api/v1/auth/google`);
+
+    // 2. Backend returns the Google OAuth redirect URL
+    const { url } = res.data;
+
+    if (!url) {
+      console.error("No OAuth URL returned from backend");
+      return;
     }
-    if (error) {
-        console.error("Google sign-up error:", error.message);
-    } else {
-        console.log("Redirecting to Google OAuth...");
-    }
+
+    // 3. Redirect user to Google OAuth
+    window.location.href = url;
+
+  } catch (error) {
+    console.error("Google OAuth error:", error);
+  }
 };
+
 
     return(
         <div className='bg-white h-screen w-screen text-black flex justify-center items-center px-4'>
