@@ -35,7 +35,7 @@ const InfoIcon = () => (
 
 export default function SchedulePoll({onClose}: {onClose: () => void}) {
   
-    const [PollOptions, setPollOptions] = useState(null);
+    const [PollOptions, setPollOptions] = useState<string[]>([]);
   
   return (
     <div>
@@ -54,7 +54,7 @@ export default function SchedulePoll({onClose}: {onClose: () => void}) {
         </div>
 
         <div className="mt-4 flex flex-col gap-3">
-              {PollOptions ?( PollOptions.map((option, index) => {
+              {PollOptions.length ? (PollOptions.map((option, index) => {
                 return (
                   <div key={index} className="flex items-center border-2 border-gray-300 gap-3">
                     <input 
