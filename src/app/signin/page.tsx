@@ -1,41 +1,11 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { supabase } from "../../utils/supabaseClient";
+
     export default function SignIn() {
     const [session, setSession] = React.useState<any>(null);
 
-    useEffect(() => {
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
-        }
-
-        if (session) {
-            console.log("User is already signed in, redirecting to /hero");
-            window.location.href = "/hero";
-        }
-    }, []);
-
     // sign in function (google)
-    const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/hero`, // optional but good practice
-        },
-    });
-    
-    if (data) {
-        console.log("Google sign-up data:", data);
-    //   setSession(data.session);
-    }
-    if (error) {
-        console.error("Google sign-up error:", error.message);
-    } else {
-        console.log("Redirecting to Google OAuth...");
-    }
-};
 
         return (
             <div className='bg-white h-screen w-screen text-black flex justify-center items-center px-4'>
@@ -48,7 +18,6 @@ import { supabase } from "../../utils/supabaseClient";
                     {/* social sign up options */}
                     <div className='flex flex-col justify-center items-center gap-2'>
                         <div
-                        onClick={handleSignIn}
                         className=' p-2 border border-2 w-full border-gray-300 rounded-md'>
                             Sign In with Google
                         </div>

@@ -1,34 +1,17 @@
 "use client"
 import axios from 'axios';
-import { supabase } from "../../utils/supabaseClient";
 import { useRouter } from 'next/navigation';
 export default function SignUp(){
     
     // const router = useRouter();
 
-const handleSignUp = async () => {
-  try {
-    const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-    // 1. Make a request to backend to get redirect URL
-    const res = await axios.get(`${backend}/api/v1/auth/google`);
-
-    // 2. Backend returns the Google OAuth redirect URL
-    const { url } = res.data;
-
-    if (!url) {
-      console.error("No OAuth URL returned from backend");
-      return;
+const handleSignUp = () => {
+    try {
+        window.location.href = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/v1/auth/google';
+    } catch (error) {
+        console.log('Error during sign-up:', error);
     }
-
-    // 3. Redirect user to Google OAuth
-    window.location.href = url;
-
-  } catch (error) {
-    console.error("Google OAuth error:", error);
-  }
-};
-
+}
 
     return(
         <div className='bg-white h-screen w-screen text-black flex justify-center items-center px-4'>
@@ -39,12 +22,11 @@ const handleSignUp = async () => {
 
                 {/* social sign in options */}
                 <div className='flex flex-col justify-center items-center gap-2'>
-                    <div 
+                    <button 
                     onClick={handleSignUp}
                     className=' p-2 border border-2 border-gray-300 w-full rounded-md'>
                         Sign in with Google
-                    </div>
-
+                    </button>
                     <div className=' p-2 border border-2 border-gray-300 w-full rounded-md'>
                         Sign in with Apple
                     </div>
