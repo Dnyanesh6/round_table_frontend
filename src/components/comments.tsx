@@ -31,15 +31,6 @@ export default function Comments() {
       </h3>
 
       <div className="space-y-4 max-h-60 overflow-y-auto pr-2"> {/* Added max-h and overflow for scroll */}
-        {commentsList.map((c) => (
-          <div key={c.id} className="flex gap-3 items-start">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0" /> {/* User avatar */}
-            <div>
-              <p className="font-semibold text-sm">{} <span className="text-xs text-gray-500 ml-1">{c.date}</span></p>
-              <p className="text-sm text-gray-700">{c.text}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       <form onSubmit={handleAddComment} className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-2">
