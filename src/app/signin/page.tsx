@@ -3,9 +3,12 @@
 import React, { useEffect } from "react";
 
     export default function SignIn() {
-    const [session, setSession] = React.useState<any>(null);
+    // const [session, setSession] = React.useState<any>(null);
 
     // sign in function (google)
+    const handleSignIn = () => {
+        window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`;
+    }
 
         return (
             <div className='bg-white h-screen w-screen text-black flex justify-center items-center px-4'>
@@ -18,6 +21,7 @@ import React, { useEffect } from "react";
                     {/* social sign up options */}
                     <div className='flex flex-col justify-center items-center gap-2'>
                         <div
+                        onClick={handleSignIn}
                         className=' p-2 border border-2 w-full border-gray-300 rounded-md'>
                             Sign In with Google
                         </div>
