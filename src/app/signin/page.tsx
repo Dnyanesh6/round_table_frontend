@@ -15,6 +15,7 @@ import React, { useEffect } from "react";
                         {/* // Email Sign Up Form */}
                         <div>
                             <form className='flex flex-col gap-4 py-4 pb-6'>
+                                <input type="text" placeholder='username' className='text-xl sm:text-3xl md:text-4xl text-center p-2 border border-2 border-gray-300 rounded-md' />
                                 <input type="email" placeholder='Email' className='text-xl sm:text-3xl md:text-4xl text-center p-2 border border-2 border-gray-300 rounded-md' />
                                 <input type="password" placeholder='Password' className='text-xl sm:text-3xl md:text-4xl text-center p-2 border border-2 border-gray-300 rounded-md' />
                                 <button type="submit" className='p-2 border border-2 border-blue-500 bg-blue-200 rounded-full'>Continue</button>
