@@ -2,16 +2,16 @@
 import axios from 'axios';
 
 import React,{useState} from 'react';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 export default function SignUp(){
-    
-    // const router = useRouter();
+    const router = useRouter();
     const [user, setUser] = useState({
         username: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
         setUser({
@@ -20,8 +20,25 @@ export default function SignUp(){
         })
     }
 
-    const handleSubmit = (e: React.MouseEvent<HTMLButtonElement,MouseEvent>) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement,MouseEvent>) => {
         e.preventDefault();
+        try {
+        const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}api/v1/user/register`, 
+            user,
+            {
+                withCredentials: true,
+            }
+        );
+
+        if (res) {
+            toast.success('Registered Successfully!');
+            router.push(`/hero/${res.data.user._id}`)
+        }
+        } catch (error) {
+            console.log('Error registering user:', error);
+            throw new Error('Error registering user');
+        }
         console.log(user);
         // Add form submission logic here
     }
