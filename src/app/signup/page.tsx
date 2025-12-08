@@ -35,7 +35,8 @@ export default function SignUp(){
 
                     {/* // Email Sign In Form */}
                     <div>
-                        <form className='flex flex-col py-4  gap-4'>
+                        <form 
+                        className='flex flex-col py-4  gap-4'>
 
                             <input
                             type="text"
