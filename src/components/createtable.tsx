@@ -6,8 +6,8 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
   const [image, setImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
-  const [space, setSpace] = useState({
-    name: "",
+  const [table, setTable] = useState({
+    tableName: "",
     description: "",
   });
 
@@ -19,30 +19,26 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
   };
 
   // SUBMIT FUNCTION
-  const handleCreate = async () => {
+  const handleCreate = async () =>{
     const formData = new FormData();
-
-    // Append text fields
-    formData.append("tableName", space.name);
-    formData.append("description", space.description);
-
-    // Append file ONLY IF exists
+    formData.append('tableName', table.tableName);
+    formData.append('description', table.description);
     if (file) {
-      formData.append("image", file); // key must match multer.single("image")
+      formData.append('coverImage', file);
     }
 
-    const res = await axios.post("api/table/createTable", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    console.log(res.data);
-    onClose();
-
-    if (!res) {
+    try {
+      const response = await axios.post("/api/table/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data);
       onClose();
+    } catch (error) {
+      throw new Error("Error creating table");
     }
-  };
+  }
 
   return (
     <div className="max-w-sm bg-white p-6 rounded-[30px] w-[500px] text-black p-4">
@@ -79,20 +75,19 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
         type="text"
         placeholder="Give your Space a name"
         className="border-2 border-gray-300 rounded-xl p-3 w-full mb-3"
-        value={space.name}
-        onChange={(e) => setSpace({ ...space, name: e.target.value })}
+        value={table.tableName}
+        onChange={(e) => setTable({ ...table, tableName: e.target.value })}
       />
 
       <input
         type="text"
         placeholder="Description"
         className="border-2 border-gray-300 rounded-xl p-3 w-full mb-4"
-        value={space.description}
-        onChange={(e) => setSpace({ ...space, description: e.target.value })}
+        value={table.description}
+        onChange={(e) => setTable({ ...table, description: e.target.value })}
       />
 
       <button
-        onClick={handleCreate}
         className="bg-blue-200 border-2 border-blue-500 text-blue-500 w-full rounded-full py-2"
       >
         Create
