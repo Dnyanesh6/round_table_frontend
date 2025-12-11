@@ -24,7 +24,7 @@ export default function SignUp(){
         e.preventDefault();
         try {
         const res = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}api/v1/user/register`, 
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/users/register`, 
             user,
             {
                 withCredentials: true,
