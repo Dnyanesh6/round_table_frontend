@@ -1,14 +1,27 @@
 import React from "react";
 import { useState } from "react";
-
+import axios from "axios";
+import toast from "react-hot-toast";
 export default function JoinTable({ onClose }: { onClose: () => void }) {
-  const [space, setSpace] = useState({
-    code:"",
-    role:"member",
-    space_id:"",
-    user_id:""
-  });
+  const [code, setCode] = useState<string>("");
 
+  const handleJoinTable = async () => {
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/join`,
+        { inviteCode: code },
+        { withCredentials: true }
+      )
+
+      if (res) {
+        toast.success(`Successfully joined table: ${res.data.tableName}`);
+        onClose();
+      }
+    } catch (error) {
+      toast.error("Failed to join table. Please check the code and try again.");
+      console.log("Error joining table:", error);
+    }
+  }
   
   return (
     <div
@@ -27,15 +40,17 @@ export default function JoinTable({ onClose }: { onClose: () => void }) {
       <div className=" flex items-center justify-center flex-col gap-4 my-4">
         <input
           placeholder="Enter space code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
           className="border-2 border-gray-300 rounded-lg w-full p-3 "
           type="text"
         />
 
         <button
-        // join table button
+        onClick={handleJoinTable}
         className="bg-blue-200 rounded-full p-3 w-full text-blue-500 border-2 border-blue-500"
         >
-          Continue
+          Join
         </button>
       </div>
 
@@ -48,7 +63,8 @@ export default function JoinTable({ onClose }: { onClose: () => void }) {
       <div 
       className="flex justify-center items-center"
       >
-        <button className="bg-white rounded-full p-2 w-full text-blue-500 border-2 border-blue-500">
+        <button 
+        className="bg-white rounded-full p-2 w-full text-blue-500 border-2 border-blue-500">
           Request to join
         </button>
       </div>
