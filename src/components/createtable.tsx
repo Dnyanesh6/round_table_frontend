@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function CreateTable({ onClose }: { onClose: () => void }) {
   const [image, setImage] = useState<string | null>(null);
@@ -19,24 +20,32 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
   };
 
   // SUBMIT FUNCTION
-  const handleCreate = async () =>{
-    const formData = new FormData();
-    formData.append('tableName', table.tableName);
-    formData.append('description', table.description);
-    if (file) {
-      formData.append('coverImage', file);
-    }
-
+  const handlecreateTable = async () => {
     try {
-      const response = await axios.post("/api/table/create", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log(response.data);
-      onClose();
+      const formData = new FormData();
+      formData.append("tableName", table.tableName);
+      formData.append("description", table.description);
+    if (file) formData.append("coverImage", file); 
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/create`,
+        formData,
+        { withCredentials: true,
+          headers:{
+            "Content-Type": "multipart/form-data",
+          }
+        }
+      )
+
+      if (res) {
+        const invite = res.data.inviteCode;
+        toast.success(`Table created! Invite Code: ${invite}`);
+        onClose();
+      }
     } catch (error) {
-      throw new Error("Error creating table");
+      console.log(error);
+      toast.error("Error creating table");
+      onClose();
     }
   }
 
@@ -88,6 +97,7 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
       />
 
       <button
+        onClick={handlecreateTable}
         className="bg-blue-200 border-2 border-blue-500 text-blue-500 w-full rounded-full py-2"
       >
         Create

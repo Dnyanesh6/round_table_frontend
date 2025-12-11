@@ -10,13 +10,14 @@ export default function SignIn() {
         username: '',
         password: ''
     });
+
     const handlChnage =  (e: React.ChangeEvent<HTMLInputElement>) => {
         setUser({
             ...user,
             [e.target.name]: e.target.value
         })
     }   
-    
+
     const handleLogin = async  (e: React.MouseEvent<HTMLButtonElement,MouseEvent>) =>{
         e.preventDefault();
         try {   
@@ -29,7 +30,7 @@ export default function SignIn() {
             )
 
             if (res) {
-            toast.success('Registered Successfully!');
+            toast.success('Logged In Successfully!');
             router.push(`/hero/${res.data.user._id}`)
         }
         } catch (error) {
