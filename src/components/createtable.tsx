@@ -38,9 +38,22 @@ export default function CreateTable({ onClose }: { onClose: () => void }) {
       )
 
       if (res) {
-        const invite = res.data.inviteCode;
-        toast.success(`Table created! Invite Code: ${invite}`);
-        onClose();
+        toast((t) => (
+      <div className="flex items-center gap-3">
+        <span>Invite Code: {res.data.inviteCode}</span>
+
+        <button
+          className="px-2 py-1 bg-blue-500 text-white rounded"
+          onClick={() => {
+            navigator.clipboard.writeText(res.data.inviteCode);
+            toast.success("Copied to clipboard!");
+            toast.dismiss(t.id);
+          }}
+        >
+          Copy
+        </button>
+      </div>
+    ));
       }
     } catch (error) {
       console.log(error);
