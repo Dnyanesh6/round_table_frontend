@@ -2,19 +2,53 @@
 import Sidebar from "../../../components/sidebar";
 import JoinTable from "../../../components/jointable";
 import CreateTable from "../../../components/createtable";
-import React from "react";
+import { toast } from "react-hot-toast";
 import {useState,useEffect} from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+interface Member {
+  user: {
+    _id: string;
+    username: string;
+  };
+  role: string;
+}
 
-export default function HeroPage() {
+interface Table {
+  _id: string;
+  tableName: string;
+  coverImage: string;
+  members: Member[];
+}
+export default function HeroPage({params}: {params: {id: string}}) {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
+    const [tables, setTables] = useState<Table[]>([]);
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
 
 
     // getting session info
+    useEffect(() => {
+        const fetchTable = async () =>{
+            try {
+                const res = await axios.get(
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getusertables`,
+                    {
+                        withCredentials: true,
+                    }
+                )
 
+                if (res) {
+                    setTables(res.data.tables);
+                    console.log(res.data.tables);
+                }
+            } catch (error) {
+                toast.error("Failed to fetch table data");
+            }
+        }
+
+        fetchTable();
+    },[]);
 
 
     // Mobile menu toggle handler (for hamburger menu)
@@ -69,24 +103,34 @@ export default function HeroPage() {
                 <div className="grid pt-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Map through your collaborative tables and display them here */}
 
-                    <div className="border border-gray-300 rounded-lg p-4">
-                        <img src="/path" alt="Icon of the organization" />
-                        <h2 className="text-2xl mb-2">Org</h2>
-                        <p>Details</p>
-                        <div className="flex flex-row items-center">
-                            Members
-                        </div>
-                    </div>
-                    {/* ...other table cards... */}
+                {tables.length === 0 && (
+                    <p className="text-gray-500">You have not joined any tables yet.</p>
+                )}
 
-                    <div className="border border-gray-300 rounded-lg p-4">
-                        <img src="/path" alt="Icon of the organization" />
-                        <h2 className="text-2xl mb-2">Org</h2>
-                        <p>Details</p>
-                        <div className="flex flex-row items-center">
-                            Members
+                {tables.map((table) => {
+                    return (
+                        <div key={table._id}
+                        className="border border-gray-300 rounded-lg p-4"
+                        >
+                        <img src={table.coverImage} 
+                        alt="Cover Image"
+                        className="w-10 h-10 rounded-full"
+                        />
+
+                        <h2 className="text-l mb-2">{table.tableName}</h2>
+                        
+                        <p className="mt-2 font-medium">Members:</p>
+                        <div className="flex gap-2 flex-wrap">
+                        {table.members.map((m) => (
+                            <span key={m.user._id} className="bg-gray-200 px-2 py-1 rounded text-sm">
+                                {m.user.username}
+                            </span>
+                        ))}
                         </div>
-                    </div>
+                        </div>
+                    )
+                })
+                }
                 </div>
 
 
@@ -100,6 +144,8 @@ export default function HeroPage() {
                         <div className="flex flex-col w-full lg:w-1/2 pt-8 gap-4">
                             {/* Map through your buddies and display them here */}
 
+
+                            {/* list the buddies in all tables */}
                             <div className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
                                 <img src="/path" alt="Icon of the buddy" />
                                 <div className="flex-1 flex-row mx-4">
