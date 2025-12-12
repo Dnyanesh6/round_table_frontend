@@ -1,9 +1,11 @@
 import React from "react";
 import { useState } from "react";
 import axios from "axios";
+import { useRouter }  from "next/navigation";
 import toast from "react-hot-toast";
 export default function JoinTable({ onClose }: { onClose: () => void }) {
   const [code, setCode] = useState<string>("");
+  const router = useRouter();
 
   const handleJoinTable = async () => {
     try {
@@ -14,6 +16,7 @@ export default function JoinTable({ onClose }: { onClose: () => void }) {
       )
 
       if (res) {
+        router.push(`/dashboard/${res.data.table._id}`)
         toast.success(`Successfully joined table: ${res.data.tableName}`);
         onClose();
       }
