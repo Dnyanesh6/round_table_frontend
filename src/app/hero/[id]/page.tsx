@@ -20,12 +20,20 @@ interface Table {
   coverImage: string;
   members: Member[];
 }
+
+interface Buddy {
+    _id: string;
+    username: string;
+    role: string;
+    tableName: string;
+    tableId: string;
+}
 export default function HeroPage({params}: {params: {id: string}}) {
     const router = useRouter();
     const [tables, setTables] = useState<Table[]>([]);
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
-
+    const [buddies, setBuddies] = useState<Buddy[]>([]);
 
     // getting session info
     useEffect(() => {
@@ -50,6 +58,26 @@ export default function HeroPage({params}: {params: {id: string}}) {
         fetchTable();
     },[]);
 
+    useEffect(() => {
+        const getBuddies = async () => {
+            try {
+                const res = await axios.get(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getbuddies`,
+                {withCredentials: true}
+            )
+
+            if (res) {
+                console.log(res.data.buddies);
+                setBuddies(res.data.buddies);
+            }
+
+            } catch (error) {
+                throw new Error("Failed to fetch buddies");
+            }
+        }
+
+        getBuddies();
+    }, [])
 
     // Mobile menu toggle handler (for hamburger menu)
     const handleMenuToggle = () => {
@@ -112,7 +140,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                         <div key={table._id}
                         className="border border-gray-300 rounded-lg p-4"
                         >
-                        <img src={table.coverImage} 
+                        <img src={table.coverImage || "/next.svg"} 
                         alt="Cover Image"
                         className="w-10 h-10 rounded-full"
                         />
@@ -146,17 +174,28 @@ export default function HeroPage({params}: {params: {id: string}}) {
 
 
                             {/* list the buddies in all tables */}
-                            <div className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
-                                <img src="/path" alt="Icon of the buddy" />
+                            {buddies.length === 0 && (
+                                <p className="text-gray-500">You have no buddies yet.</p>
+                            )}
+
+                            {buddies.map((buddy) => {
+                                return (
+                                    <div 
+                                    key={buddy.username}
+                                    className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
+
+                                    {/* <img src="/path" alt="Icon of the buddy" /> */}
                                 <div className="flex-1 flex-row mx-4">
-                                    <h2 className="text-2xl mb-2">Buddy</h2>
+                                    <h2 className="text-xl mb-2">{buddy.username}</h2>
                                     <div className="flex flex-row items-center">
-                                        Members
+                                        {buddy.role === "admin" ? "Admin" : "Member"}
                                     </div>
                                 </div>
                                 <button className="text-blue-500 p-2 h-10 bg-blue-300 rounded-lg flex-shrink-0">Chat</button>
                             </div>
-                            {/* ...other buddy cards... */}
+                                )
+                            })}
+                            
                         </div>
 
                         {/* 3. Chat Section: Full width by default, half on 'lg' */}
