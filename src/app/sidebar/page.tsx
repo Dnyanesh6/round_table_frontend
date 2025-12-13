@@ -34,7 +34,7 @@ export default function Sidebar({className=""}) {
                 <div className="p-2">Resources</div>
                 </Link>
                 
-                <Link href={`/showcase/${userId}`}>
+                <Link href={`/resourcecd/${userId}`}>
                 <div className="p-2">Showcase</div>
                 </Link>
             </div>
