@@ -1,10 +1,10 @@
 import Link from "next/link"
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Sidebar({className=""}) {
-    const router = useRouter();
+    // const router = useRouter();
     const [userId, setUser] = useState(null);
 
     useEffect(() => {
