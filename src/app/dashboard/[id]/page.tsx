@@ -7,6 +7,7 @@ import Sidebar from "../../../components/sidebar";
 import TaskItem from "../../../components/taskItem";
 import AddGoals from "../../../components/addGoals";
 import SchedulePoll from "../../../components/schedulePoll";
+import ShareResources from "../../../components/shareResources";
 
 // 🔹 Import the TaskItem component you created
 // import TaskItem from "@/components/TaskItem";
@@ -42,6 +43,7 @@ export default function DashboardPage({params}: {params: {id: string}}) {
     const router = useRouter();
     const [add, setAdd] = useState(false);
     const [schedule, setSchedule] = useState(false);
+    const [share,setShare] = useState(false);
     const [isAdmin, setIsAdmin] = useState(true); // Mock admin status
     
     // 🔹 State to control the mobile menu
@@ -88,6 +90,11 @@ export default function DashboardPage({params}: {params: {id: string}}) {
                     <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-[Instrument]">
                         Good Morning, Captain
                     </h1>
+
+                    <button
+                        onClick={() => setShare(!share)}
+                        className="mt-4 lg:p-2 bg-green-300 border p-2 border-green-500 rounded-lg text-green-700"> + Share Resources
+                    </button>
                 </div>
 
                 {/* Stats Section */}
@@ -219,6 +226,24 @@ export default function DashboardPage({params}: {params: {id: string}}) {
                             </div>
                         </div>            
             )}
+
+            {share && (
+                        <div
+                        className="fixed inset-0 flex items-center justify-center z-50">
+                        {/* backdrop */}
+                        <div 
+                        onClick={() => setShare(false)}
+                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40">
+                        </div>
+                        
+                        {/* content */}
+                        <div></div>
+                            <div 
+                            className="flex flex-col items-center w-screen m-20 mr-10 ml-10 justify-center inset-40  rounded-lg z-50">
+                                <ShareResources onClose={() => setShare(false)} />
+                            </div>
+                    </div>
+                )}
         </div>
     );
 }
