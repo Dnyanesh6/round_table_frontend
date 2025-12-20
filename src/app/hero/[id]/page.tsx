@@ -28,35 +28,24 @@ interface Buddy {
     tableName: string;
     tableId: string;
 }
+
+interface Pagination {
+    page: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+}
 export default function HeroPage({params}: {params: {id: string}}) {
     const router = useRouter();
-    const [tables, setTables] = useState<Table[]>([]);
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
     const [buddies, setBuddies] = useState<Buddy[]>([]);
-
-    // getting session info
-    useEffect(() => {
-        const fetchTable = async () =>{
-            try {
-                const res = await axios.get(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getusertables`,
-                    {
-                        withCredentials: true,
-                    }
-                )
-
-                if (res) {
-                    setTables(res.data.tables);
-                    console.log(res.data.tables);
-                }
-            } catch (error) {
-                toast.error("Failed to fetch table data");
-            }
-        }
-
-        fetchTable();
-    },[]);
+    
+    //fetching table data of the user
+    const [tables, setTables] = useState<Table[]>([]);
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+    const LIMIT = 6;
 
     useEffect(() => {
         const getBuddies = async () => {
@@ -86,8 +75,31 @@ export default function HeroPage({params}: {params: {id: string}}) {
         router.push("/sidebar"); // Navigate to the sidebar
     };
 
-    // If loading session info, you might want to show a loading state
-    
+    const fetchTables = async (pageNumber = 1) => {
+        try {
+            const res = await axios.get(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getusertables?page=${pageNumber}&limit=${LIMIT}`,
+                {
+                    withCredentials: true,
+                }
+            )
+
+            setTables(res.data.tables);
+            setPagination(res.data.pagination);
+            setPage(pageNumber);
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to fetch table data");
+        }
+    }
+
+    useEffect(() => {
+        const loadTables = async () => {
+            await fetchTables(1);
+        };
+        loadTables();
+    }, []);
+
     return (
         // 1. Main layout: flex-row for desktop, but flex (col) for mobile is
         // handled by hiding the sidebar.
@@ -139,7 +151,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                     return (
                         <div key={table._id}
                         className="border border-gray-300 rounded-lg p-4"
-                        >
+                        >   
                         <img src={table.coverImage || "/next.svg"} 
                         alt="Cover Image"
                         className="w-10 h-10 rounded-full"
@@ -161,6 +173,27 @@ export default function HeroPage({params}: {params: {id: string}}) {
                 }
                 </div>
 
+                <div className="flex justify-center items-center gap-4 mt-6">
+                    <button
+                        disabled={!pagination?.hasPrevPage}
+                        onClick={() => fetchTables(page - 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                    Previous
+                    </button>
+
+                    <span>
+                        Page {pagination?.page} of {pagination?.totalPages}
+                    </span>
+
+                    <button
+                        disabled={!pagination?.hasNextPage}
+                        onClick={() => fetchTables(page + 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+            </div>
 
                 <div className="mt-12"> {/* Added margin-top for spacing */}
                     <h1 className="text-3xl lg:text-4xl">Your Buddies</h1>
