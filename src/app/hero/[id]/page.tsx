@@ -2,6 +2,7 @@
 import Sidebar from "../../../components/sidebar";
 import JoinTable from "../../../components/jointable";
 import CreateTable from "../../../components/createtable";
+import Chat from "../../../components/chat";
 import { toast } from "react-hot-toast";
 import {useState,useEffect} from "react";
 import { useRouter } from "next/navigation";
@@ -35,6 +36,14 @@ interface Pagination {
     hasPrevPage: boolean;
     hasNextPage: boolean;
 }
+
+interface ChatType {
+    _id: string;
+    participants: {
+    _id: string;
+    username: string;
+}[];
+}
 export default function HeroPage({params}: {params: {id: string}}) {
     const router = useRouter();
     const [join, setJoin] = useState(false);
@@ -46,6 +55,10 @@ export default function HeroPage({params}: {params: {id: string}}) {
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const LIMIT = 6;
+
+    // chat activities
+    const [activeChat, setActiveChat] = useState<ChatType | null>(null);
+    
 
     useEffect(() => {
         const getBuddies = async () => {
@@ -67,13 +80,6 @@ export default function HeroPage({params}: {params: {id: string}}) {
 
         getBuddies();
     }, [])
-
-    // Mobile menu toggle handler (for hamburger menu)
-    const handleMenuToggle = () => {
-        // Logic to toggle the mobile menu
-        console.log("Menu toggled");
-        router.push("/sidebar"); // Navigate to the sidebar
-    };
 
     const fetchTables = async (pageNumber = 1) => {
         try {
@@ -99,6 +105,29 @@ export default function HeroPage({params}: {params: {id: string}}) {
         };
         loadTables();
     }, []);
+
+    const startChat = async (buddyId: string) => {
+        console.log("clicked");
+        const res = await  axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chats/create`,
+            {otherUserId: buddyId},
+            {withCredentials: true}
+        );
+        console.log(res);
+        
+        setActiveChat(res.data.chat);
+    }
+
+    // Mobile menu toggle handler (for hamburger menu)
+    const handleMenuToggle = () => {
+        // Logic to toggle the mobile menu
+        console.log("Menu toggled");
+        router.push("/sidebar"); // Navigate to the sidebar
+    };
+
+    const navigateTable = (tableId: string) => {
+        router.push(`/dashboard/${tableId}`);
+    }
 
     return (
         // 1. Main layout: flex-row for desktop, but flex (col) for mobile is
@@ -150,6 +179,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                 {tables.map((table) => {
                     return (
                         <div key={table._id}
+                        onClick={() => navigateTable(table._id)}
                         className="border border-gray-300 rounded-lg p-4"
                         >   
                         <img src={table.coverImage || "/next.svg"} 
@@ -214,7 +244,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                             {buddies.map((buddy) => {
                                 return (
                                     <div 
-                                    key={buddy.username}
+                                    key={buddy._id}
                                     className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
 
                                     {/* <img src="/path" alt="Icon of the buddy" /> */}
@@ -224,7 +254,12 @@ export default function HeroPage({params}: {params: {id: string}}) {
                                         {buddy.role === "admin" ? "Admin" : "Member"}
                                     </div>
                                 </div>
-                                <button className="text-blue-500 p-2 h-10 bg-blue-300 rounded-lg flex-shrink-0">Chat</button>
+
+                                <button
+                                onClick={() => startChat(buddy._id)}
+                                className="text-blue-500 p-2 h-10 bg-blue-300 rounded-lg flex-shrink-0"
+                                >Chat
+                                </button>
                             </div>
                                 )
                             })}
@@ -232,34 +267,13 @@ export default function HeroPage({params}: {params: {id: string}}) {
                         </div>
 
                         {/* 3. Chat Section: Full width by default, half on 'lg' */}
-                        <div className="pt-8 h-full mb-2 border border-gray-300 rounded-lg p-4 mt-8 w-full lg:w-1/2">
-                            {/* Removed extra w-1/2 and wrapper div */}
-                            <div className="border h-full w-full border-gray-300 rounded-lg pt-8 p-4">
-                                {/* 4. Chat header */}
-                                <div className="flex h-full gap-4 items-center border-b border-gray-300 pb-4">
-                                    <img src="/path/to/chat/image" alt="icon" />
-                                    {/* 4. 'flex-1' to push button to the right */}
-                                    <div className="flex flex-col flex-1">
-                                        <p>Name</p>
-                                        <p>Member</p>
-                                    </div>
-                                    <button className="border border-2 border-green-500 p-2 text-green-500 bg-green-200 rounded-lg flex-shrink-0">Online</button>
-                                </div>
-
-                                <div className="h-96 rounded-lg mt-4 p-4 overflow-y-auto">
-                                    {/* chat messages will go here */}
-                                </div>
-
-                                <div className="mt-4 flex flex-row gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Type your message..."
-                                        className="w-full border border-gray-300 rounded-lg p-2"
-                                    />
-                                    <button className="border border-2 border-blue-500 bg-blue-200 text-blue-500 rounded-lg p-2">Send</button>
-                                </div>
+                        {activeChat != null ? (
+                            <Chat activeChat={activeChat} currentUserId={params.id}/>
+                        ):(
+                            <div className="pt-8 h-full mb-2 border border-gray-300 rounded-lg p-4 mt-8 w-full lg:w-1/2 flex items-center justify-center">
+                                <p className="text-gray-500">Select a buddy to start chatting.</p>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 

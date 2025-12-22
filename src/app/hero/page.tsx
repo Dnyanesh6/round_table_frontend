@@ -2,21 +2,96 @@
 import Sidebar from "../../components/sidebar";
 import JoinTable from "../../components/jointable";
 import CreateTable from "../../components/createtable";
-import React from "react";
+import { toast } from "react-hot-toast";
 import {useState,useEffect} from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+interface Member {
+  user: {
+    _id: string;
+    username: string;
+  };
+  role: string;
+}
 
-export default function HeroPage() {
+interface Table {
+  _id: string;
+  tableName: string;
+  coverImage: string;
+  members: Member[];
+}
+
+interface Buddy {
+    _id: string;
+    username: string;
+    role: string;
+    tableName: string;
+    tableId: string;
+}
+
+interface Pagination {
+    page: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+}
+export default function HeroPage({params}: {params: {id: string}}) {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
+    const [buddies, setBuddies] = useState<Buddy[]>([]);
+    
+    //fetching table data of the user
+    const [tables, setTables] = useState<Table[]>([]);
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+    const LIMIT = 6;
 
+    useEffect(() => {
+        const getBuddies = async () => {
+            try {
+                const res = await axios.get(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getbuddies`,
+                {withCredentials: true}
+            )
 
-    // getting session info
+            if (res) {
+                console.log(res.data.buddies);
+                setBuddies(res.data.buddies);
+            }
 
+            } catch (error) {
+                throw new Error("Failed to fetch buddies");
+            }
+        }
 
+        getBuddies();
+    }, [])
 
+    const fetchTables = async (pageNumber = 1) => {
+        try {
+            const res = await axios.get(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/tables/getusertables?page=${pageNumber}&limit=${LIMIT}`,
+                {
+                    withCredentials: true,
+                }
+            )
+
+            setTables(res.data.tables);
+            setPagination(res.data.pagination);
+            setPage(pageNumber);
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to fetch table data");
+        }
+    }
+
+    useEffect(() => {
+        const loadTables = async () => {
+            await fetchTables(1);
+        };
+        loadTables();
+    }, []);
     // Mobile menu toggle handler (for hamburger menu)
     const handleMenuToggle = () => {
         // Logic to toggle the mobile menu
@@ -24,8 +99,6 @@ export default function HeroPage() {
         router.push("/sidebar"); // Navigate to the sidebar
     };
 
-    // If loading session info, you might want to show a loading state
-    
     return (
         // 1. Main layout: flex-row for desktop, but flex (col) for mobile is
         // handled by hiding the sidebar.
@@ -69,26 +142,60 @@ export default function HeroPage() {
                 <div className="grid pt-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Map through your collaborative tables and display them here */}
 
-                    <div className="border border-gray-300 rounded-lg p-4">
-                        <img src="/path" alt="Icon of the organization" />
-                        <h2 className="text-2xl mb-2">Org</h2>
-                        <p>Details</p>
-                        <div className="flex flex-row items-center">
-                            Members
-                        </div>
-                    </div>
-                    {/* ...other table cards... */}
+                {tables.length === 0 && (
+                    <p className="text-gray-500">You have not joined any tables yet.</p>
+                )}
 
-                    <div className="border border-gray-300 rounded-lg p-4">
-                        <img src="/path" alt="Icon of the organization" />
-                        <h2 className="text-2xl mb-2">Org</h2>
-                        <p>Details</p>
-                        <div className="flex flex-row items-center">
-                            Members
+                {tables.map((table) => {
+                    return (
+                        <div key={table._id}
+                        onClick={() =>{
+                            
+                        }}
+                        className="border border-gray-300 rounded-lg p-4"
+                        >   
+                        <img src={table.coverImage || "/next.svg"} 
+                        alt="Cover Image"
+                        className="w-10 h-10 rounded-full"
+                        />
+
+                        <h2 className="text-l mb-2">{table.tableName}</h2>
+                        
+                        <p className="mt-2 font-medium">Members:</p>
+                        <div className="flex gap-2 flex-wrap">
+                        {table.members.map((m) => (
+                            <span key={m.user._id} className="bg-gray-200 px-2 py-1 rounded text-sm">
+                                {m.user.username}
+                            </span>
+                        ))}
                         </div>
-                    </div>
+                        </div>
+                    )
+                })
+                }
                 </div>
 
+                <div className="flex justify-center items-center gap-4 mt-6">
+                    <button
+                        disabled={!pagination?.hasPrevPage}
+                        onClick={() => fetchTables(page - 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                    Previous
+                    </button>
+
+                    <span>
+                        Page {pagination?.page} of {pagination?.totalPages}
+                    </span>
+
+                    <button
+                        disabled={!pagination?.hasNextPage}
+                        onClick={() => fetchTables(page + 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+            </div>
 
                 <div className="mt-12"> {/* Added margin-top for spacing */}
                     <h1 className="text-3xl lg:text-4xl">Your Buddies</h1>
@@ -100,17 +207,30 @@ export default function HeroPage() {
                         <div className="flex flex-col w-full lg:w-1/2 pt-8 gap-4">
                             {/* Map through your buddies and display them here */}
 
-                            <div className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
-                                <img src="/path" alt="Icon of the buddy" />
+
+                            {/* list the buddies in all tables */}
+                            {buddies.length === 0 && (
+                                <p className="text-gray-500">You have no buddies yet.</p>
+                            )}
+
+                            {buddies.map((buddy) => {
+                                return (
+                                    <div 
+                                    key={buddy.username}
+                                    className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
+
+                                    {/* <img src="/path" alt="Icon of the buddy" /> */}
                                 <div className="flex-1 flex-row mx-4">
-                                    <h2 className="text-2xl mb-2">Buddy</h2>
+                                    <h2 className="text-xl mb-2">{buddy.username}</h2>
                                     <div className="flex flex-row items-center">
-                                        Members
+                                        {buddy.role === "admin" ? "Admin" : "Member"}
                                     </div>
                                 </div>
                                 <button className="text-blue-500 p-2 h-10 bg-blue-300 rounded-lg flex-shrink-0">Chat</button>
                             </div>
-                            {/* ...other buddy cards... */}
+                                )
+                            })}
+                            
                         </div>
 
                         {/* 3. Chat Section: Full width by default, half on 'lg' */}
