@@ -1,4 +1,5 @@
 "use client"
+import { useParams } from "next/navigation";
 import Sidebar from "../../../components/sidebar";
 import JoinTable from "../../../components/jointable";
 import CreateTable from "../../../components/createtable";
@@ -23,7 +24,7 @@ interface Table {
 }
 
 interface Buddy {
-    _id: string;
+    userId: string;
     username: string;
     role: string;
     tableName: string;
@@ -38,13 +39,13 @@ interface Pagination {
 }
 
 interface ChatType {
-    _id: string;
+    chatId: string;
     participants: {
     _id: string;
     username: string;
 }[];
 }
-export default function HeroPage({params}: {params: {id: string}}) {
+export default function HeroPage() {
     const router = useRouter();
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
@@ -55,11 +56,13 @@ export default function HeroPage({params}: {params: {id: string}}) {
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const LIMIT = 6;
-
+    
     // chat activities
     const [activeChat, setActiveChat] = useState<ChatType | null>(null);
     
-
+    const params = useParams<{ id: string }>();
+    const userId = params.id;
+    // fetch buddies
     useEffect(() => {
         const getBuddies = async () => {
             try {
@@ -81,6 +84,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
         getBuddies();
     }, [])
 
+    //fetch tables with pagination
     const fetchTables = async (pageNumber = 1) => {
         try {
             const res = await axios.get(
@@ -99,6 +103,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
         }
     }
 
+    //fetch tables with pagination
     useEffect(() => {
         const loadTables = async () => {
             await fetchTables(1);
@@ -106,17 +111,23 @@ export default function HeroPage({params}: {params: {id: string}}) {
         loadTables();
     }, []);
 
-    const startChat = async (buddyId: string) => {
+    const startChat = async (userId: string) => {
         console.log("clicked");
         const res = await  axios.post(
             `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chats/create`,
-            {otherUserId: buddyId},
+            {otherUserId: userId},
             {withCredentials: true}
         );
         console.log(res);
         
-        setActiveChat(res.data.chat);
+        setActiveChat(res.data);
+        console.log(activeChat);
     }
+
+    useEffect(() => {
+  console.log("activeChat updated:", activeChat);
+}, [activeChat]);
+
 
     // Mobile menu toggle handler (for hamburger menu)
     const handleMenuToggle = () => {
@@ -244,7 +255,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                             {buddies.map((buddy) => {
                                 return (
                                     <div 
-                                    key={buddy._id}
+                                    key={buddy.userId}
                                     className="border flex flex-row items-center border-gray-300 rounded-lg p-4">
 
                                     {/* <img src="/path" alt="Icon of the buddy" /> */}
@@ -256,7 +267,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
                                 </div>
 
                                 <button
-                                onClick={() => startChat(buddy._id)}
+                                onClick={() => startChat(buddy.userId)}
                                 className="text-blue-500 p-2 h-10 bg-blue-300 rounded-lg flex-shrink-0"
                                 >Chat
                                 </button>
@@ -268,7 +279,7 @@ export default function HeroPage({params}: {params: {id: string}}) {
 
                         {/* 3. Chat Section: Full width by default, half on 'lg' */}
                         {activeChat != null ? (
-                            <Chat activeChat={activeChat} currentUserId={params.id}/>
+                            <Chat activeChat={activeChat} currentUserId={userId}/>
                         ):(
                             <div className="pt-8 h-full mb-2 border border-gray-300 rounded-lg p-4 mt-8 w-full lg:w-1/2 flex items-center justify-center">
                                 <p className="text-gray-500">Select a buddy to start chatting.</p>
