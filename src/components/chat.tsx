@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { io, Socket } from "socket.io-client";
-import { send } from "process";
+import { socket } from "../utils/socket";
 
 interface Participant {
   _id: string;
@@ -33,7 +32,7 @@ interface ChatProps {
 
 export default function Chat({ activeChat, currentUserId }: ChatProps) {
   /* ---------------- DERIVED DATA ---------------- */
-  const otherUser = activeChat.participants.find(
+  const otherUser = activeChat?.participants?.find(
     (p) => p._id !== currentUserId
   );
 
@@ -41,9 +40,6 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(true);
-
-  /* ---------------- SOCKET ---------------- */
-  const socketRef = useRef<Socket | null>(null);
 
   /* ---------------- FETCH OLD MESSAGES ---------------- */
   useEffect(() => {
@@ -58,11 +54,10 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
           { withCredentials: true }
         );
 
-        setMessages(res.data.messages);
-        console.log(res.data.messages);
-        
+        setMessages(res.data?.messages || []);
       } catch (error) {
         toast.error("Failed to load messages");
+        setMessages([]);
       } finally {
         setLoading(false);
       }
@@ -74,30 +69,25 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
   /* ---------------- SOCKET CONNECTION ---------------- */
   useEffect(() => {
     if (!activeChat?.chatId) return;
-    const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
-      withCredentials: true,
-    });
-
-    socketRef.current = socket;
 
     socket.emit("joinChat", activeChat.chatId);
 
-    socket.on("newMessage", (message: MessageType) => {
-      setMessages((prev) => [...prev, message]);
-    });
+    const handleNewMessage = (newMessage: MessageType) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    };
+
+    socket.on("newMessage", handleNewMessage);
 
     return () => {
-      socket.off("newMessage");
-      socket.disconnect();
+      socket.off("newMessage", handleNewMessage);
     };
   }, [activeChat.chatId]);
 
   /* ---------------- SEND MESSAGE ---------------- */
   const sendMessage = () => {
     if (!inputMessage.trim()) return;
-    if (!socketRef.current) return;
 
-    socketRef.current.emit("sendMessage", {
+    socket.emit("sendMessage", {
       chatId: activeChat.chatId,
       senderId: currentUserId,
       text: inputMessage,
@@ -109,7 +99,7 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
   return (
     <div className="pt-8 h-full mb-2 rounded-lg p-4 mt-8 w-full lg:w-1/2">
       <div className="border h-full w-full border-gray-300 rounded-lg pt-6 p-4 flex flex-col">
-        
+
         {/* HEADER */}
         <div className="flex gap-4 items-center border-b border-gray-300 pb-4">
           <img
@@ -170,11 +160,6 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
           />
           <button
             onClick={sendMessage}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMessage()
-              }
-            }}
             className="border border-blue-500 bg-blue-200 text-blue-500 rounded-lg px-4"
           >
             Send
