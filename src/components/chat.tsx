@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { socket } from "../utils/socket";
+import { Socket } from "socket.io-client";
 
 interface Participant {
   _id: string;
@@ -36,66 +37,76 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
     (p) => p._id !== currentUserId
   );
 
-  /* ---------------- STATE ---------------- */
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [inputMessage, setInputMessage] = useState<string>("");
 
-  /* ---------------- FETCH OLD MESSAGES ---------------- */
+  const socketRef = useRef<Socket>(null);
+
+  // Fetch messages when activeChat changes
   useEffect(() => {
-    if (!activeChat?.chatId) return;
+    if(!activeChat?.chatId) return;
 
     const fetchMessages = async () => {
       try {
         setLoading(true);
 
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/messages/chat/${activeChat.chatId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chat/${activeChat.chatId}/messages`,
           { withCredentials: true }
-        );
+        )
 
-        setMessages(res.data?.messages || []);
+        setMessages(res.data.messages);
       } catch (error) {
-        toast.error("Failed to load messages");
-        setMessages([]);
+        toast.error("Failed to load messages.");
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchMessages();
-  }, [activeChat.chatId]);
+  }, [activeChat?.chatId]);
 
-  /* ---------------- SOCKET CONNECTION ---------------- */
+
+  //  socket connection for receiving new messages
   useEffect(() => {
-    if (!activeChat?.chatId) return;
+    if(activeChat?.chatId) return;
+    
+    socketRef.current = socket;
 
-    socket.emit("joinChat", activeChat.chatId);
+    socket.on("connect", () => {
+      console.log("Connected to chat socket",socket.id);
+      socket.emit("joinChat", { chatId: activeChat.chatId });
+    })
 
-    const handleNewMessage = (newMessage: MessageType) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    };
+    socket.on("newMessage", (messages: MessageType) => {
+      setMessages((prevMessages) => [...prevMessages, messages]);
+    })
 
-    socket.on("newMessage", handleNewMessage);
+    socket.on("connect_error", () => {
+      toast.error("Chat connection failed");
+    })
 
     return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [activeChat.chatId]);
+      socket.disconnect();
+      socketRef.current = null;
+    }
+  },[activeChat?.chatId]);
 
-  /* ---------------- SEND MESSAGE ---------------- */
-  const sendMessage = () => {
-    if (!inputMessage.trim()) return;
+//  Send message function
+const sendMessage = async () => {
+    if(inputMessage.trim() === "" || !activeChat?.chatId) return;
 
-    socket.emit("sendMessage", {
-      chatId: activeChat.chatId,
-      senderId: currentUserId,
-      text: inputMessage,
-    });
+    if(socketRef.current) {
+      socketRef.current.emit("sendMessage", {
+        chatId: activeChat.chatId,
+        text: inputMessage,
+        senderId: currentUserId,
+      })
 
-    setInputMessage("");
-  };
-
+      setInputMessage("");
+    }
+}
+ 
   return (
     <div className="pt-8 h-full mb-2 rounded-lg p-4 mt-8 w-full lg:w-1/2">
       <div className="border h-full w-full border-gray-300 rounded-lg pt-6 p-4 flex flex-col">
@@ -153,13 +164,13 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
           <input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            // onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             type="text"
             placeholder="Type your message..."
             className="w-full border border-gray-300 rounded-lg p-2"
           />
           <button
-            onClick={sendMessage}
+            // onClick={sendMessage}
             className="border border-blue-500 bg-blue-200 text-blue-500 rounded-lg px-4"
           >
             Send
