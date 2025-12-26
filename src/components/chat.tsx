@@ -164,13 +164,13 @@ const sendMessage = async () => {
           <input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            // onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             type="text"
             placeholder="Type your message..."
             className="w-full border border-gray-300 rounded-lg p-2"
           />
           <button
-            // onClick={sendMessage}
+            onClick={sendMessage}
             className="border border-blue-500 bg-blue-200 text-blue-500 rounded-lg px-4"
           >
             Send
