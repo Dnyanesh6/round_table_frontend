@@ -43,6 +43,31 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
 
   const socketRef = useRef<Socket>(null);
 
+  //  socket connection for receiving new messages
+  useEffect(() => {
+    if(!activeChat?.chatId) return;
+    
+    socketRef.current = socket;
+    
+    socket.on("connect", () => {
+      console.log("Connected to chat socket",socket.id);
+      socket.emit("joinChat", { chatId: activeChat.chatId });
+    })
+    
+    socket.on("newMessage", (messages: MessageType) => {
+      setMessages((prevMessages) => [...prevMessages, messages]);
+    })
+    
+    socket.on("connect_error", () => {
+      toast.error("Chat connection failed");
+    })
+    
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    }
+  },[activeChat?.chatId]);
+  
   // Fetch messages when activeChat changes
   useEffect(() => {
     if(!activeChat?.chatId) return;
@@ -66,35 +91,36 @@ export default function Chat({ activeChat, currentUserId }: ChatProps) {
     fetchMessages();
   }, [activeChat?.chatId]);
 
-
-  //  socket connection for receiving new messages
-  useEffect(() => {
-    if(activeChat?.chatId) return;
-    
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      console.log("Connected to chat socket",socket.id);
-      socket.emit("joinChat", { chatId: activeChat.chatId });
-    })
-
-    socket.on("newMessage", (messages: MessageType) => {
-      setMessages((prevMessages) => [...prevMessages, messages]);
-    })
-
-    socket.on("connect_error", () => {
-      toast.error("Chat connection failed");
-    })
-
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    }
-  },[activeChat?.chatId]);
-
 //  Send message function
 const sendMessage = async () => {
+  console.log("clicked send message");
     if(inputMessage.trim() === "" || !activeChat?.chatId) return;
+
+    const tempMessage: MessageType = {
+    _id: crypto.randomUUID(),          // temporary id
+    text: inputMessage,
+    sender: {
+      _id: currentUserId,
+      username: "You",
+    },
+    createdAt: new Date().toISOString(),
+  };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
+    try {
+      const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chat/create-message`,
+      {
+        chatId: activeChat.chatId,
+        text: inputMessage,
+      },
+      { withCredentials: true }
+    )
+    } catch (error) {
+      toast.error("Failed to send message.");
+      console.log(error);
+    }
 
     if(socketRef.current) {
       socketRef.current.emit("sendMessage", {

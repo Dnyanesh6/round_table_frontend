@@ -46,6 +46,8 @@ interface ChatType {
 }[];
 }
 export default function HeroPage() {
+    console.log("🔥 HERO PAGE RUNNING");
+
     const router = useRouter();
     const [join, setJoin] = useState(false);
     const [create, setCreate] = useState(false);
@@ -112,10 +114,11 @@ export default function HeroPage() {
     }, []);
 
     const startChat = async (userId: string) => {
-        console.log("clicked");
-        const res = await  axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chats/create`,
-            {otherUserId: userId},
+    alert("START CHAT CLICKED");
+    console.log("START CHAT CLICKED", userId);
+        const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/v1/chat/create`,
+            {recipientId: userId},
             {withCredentials: true}
         );
         console.log(res);
